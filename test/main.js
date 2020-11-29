@@ -108,9 +108,8 @@ describe('node-fetch', () => {
 		return expect(fetch(url)).to.eventually.be.rejectedWith(TypeError, /URL scheme "ftp" is not supported/);
 	});
 
-	it('should reject with error on network failure', function () {
-		this.timeout(5000);
-		const url = 'http://localhost:50000/';
+	it('should reject with error on network failure', () => {
+		const url = 'http://localhost:6/';
 		return expect(fetch(url)).to.eventually.be.rejected
 			.and.be.an.instanceOf(FetchError)
 			.and.include({type: 'system', code: 'ECONNREFUSED', errno: 'ECONNREFUSED'});
@@ -126,9 +125,8 @@ describe('node-fetch', () => {
 		return expect(err).to.not.have.property('erroredSysCall');
 	});
 
-	it('system error is extracted from failed requests', function () {
-		this.timeout(5000);
-		const url = 'http://localhost:50000/';
+	it('system error is extracted from failed requests', () => {
+		const url = 'http://localhost:6/';
 		return expect(fetch(url)).to.eventually.be.rejected
 			.and.be.an.instanceOf(FetchError)
 			.and.have.property('erroredSysCall');
@@ -603,15 +601,18 @@ describe('node-fetch', () => {
 			.and.have.property('code', 'ECONNRESET');
 	});
 
-	it('should handle network-error partial response', () => {
-		const url = `${base}error/premature`;
-		return fetch(url).then(res => {
-			expect(res.status).to.equal(200);
-			expect(res.ok).to.be.true;
-			return expect(res.text()).to.eventually.be.rejectedWith(Error)
-				.and.have.property('message').matches(/Premature close|The operation was aborted/);
+	if (!/^v12\.[3-9]\./.test(process.version)) {
+		// This cannot be simulated in node 12.3-12.9
+		it('should handle network-error partial response', () => {
+			const url = `${base}error/premature`;
+			return fetch(url).then(res => {
+				expect(res.status).to.equal(200);
+				expect(res.ok).to.be.true;
+				return expect(res.text()).to.eventually.be.rejectedWith(Error)
+					.and.have.property('message').matches(/Premature close|The operation was aborted/);
+			});
 		});
-	});
+	}
 
 	it('should handle DNS-error response', () => {
 		const url = 'http://domain.invalid';
