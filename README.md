@@ -228,11 +228,13 @@ Wrapping the fetch function into a `try/catch` block will catch _all_ exceptions
 ```js
 const fetch = require('node-fetch');
 
-try {
-	fetch('https://domain.invalid/');
-} catch (error) {
-	console.log(error);
-}
+(async () => {
+	try {
+		await fetch('https://domain.invalid/');
+	} catch (error) {
+		console.log(error);
+	}
+})();
 ```
 
 ### Handling client and server errors
@@ -242,20 +244,33 @@ It is common to create a helper function to check that the response contains no 
 ```js
 const fetch = require('node-fetch');
 
+class HTTPResponseError extends Error {
+	constructor(response, ...args) {
+		this.response = response;
+		super(`HTTP Error Response: ${res.status} ${res.statusText}`, ...args);
+	}
+}
+
 const checkStatus = res => {
 	if (res.ok) {
 		// res.status >= 200 && res.status < 300
 		return res;
 	} else {
-		throw MyCustomError(res.statusText);
+		throw new HTTPResponseError(res);
 	}
 }
 
 (async () => {
 	const response = await fetch('https://httpbin.org/status/400');
-	const data = checkStatus(response);
 
-	console.log(data); //=> MyCustomError
+	try {
+		checkStatus(response);
+	} catch (error) {
+		console.error(error);
+
+		const errorBody = await error.response.text();
+		console.error(`Error body: ${errorBody}`);
+	}
 })();
 ```
 
@@ -296,8 +311,8 @@ const fileType = require('file-type');
 (async () => {
 	const response = await fetch('https://octodex.github.com/images/Fintechtocat.png');
 	const buffer = await response.buffer();
-	const type = fileType.fromBuffer(buffer)
-	
+	const type = await fileType.fromBuffer(buffer)
+
 	console.log(type);
 })();
 ```
@@ -391,9 +406,12 @@ const FormData = require('formdata-node');
 const form = new FormData();
 form.set('greeting', 'Hello, world!');
 
-fetch('https://httpbin.org/post', {method: 'POST', body: form})
-	.then(res => res.json())
-	.then(json => console.log(json));
+(async () => {
+	const res = await fetch('https://httpbin.org/post', {method: 'POST', body: form});
+	const json = await res.json();
+
+	console.log(json);
+})();
 ```
 
 ### Request cancellation with AbortSignal
@@ -415,11 +433,9 @@ const timeout = setTimeout(() => {
 	try {
 		const response = await fetch('https://example.com', {signal: controller.signal});
 		const data = await response.json();
-		
-		useData(data);
 	} catch (error) {
-		if (error.name === 'AbortError') {
-            console.log('request was aborted');
+		if (error instanceof fetch.AbortError) {
+			console.log('request was aborted');
 		}
 	} finally {
 		clearTimeout(timeout);
@@ -530,11 +546,11 @@ const fetch = require('node-fetch');
 (async () => {
 	const response = await fetch('https://example.com');
 	const r1 = await response.clone();
-	
-	return Promise.all([res.json(), r1.text()]).then(results => {
-		console.log(results[0]);
-		console.log(results[1]);
-	});
+
+	const results = await Promise.all([response.json(), r1.text()]);
+
+	console.log(results[0]);
+	console.log(results[1]);
 })();
 ```
 
