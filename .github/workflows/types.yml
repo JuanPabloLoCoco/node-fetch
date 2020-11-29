@@ -1,13 +1,13 @@
 name: CI
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    paths:
-      - "**.ts"
-      - package.json
-      - .github/workflows/types.yml
+on: [push, workflow_dispatch]
+  # push:
+  #   branches: [master]
+  # pull_request:
+  #   paths:
+  #     - "**.ts"
+  #     - package.json
+  #     - .github/workflows/types.yml
 
 jobs:
   typescript:
