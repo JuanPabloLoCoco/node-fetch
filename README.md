@@ -743,6 +743,20 @@ For older versions please use the type definitions from [DefinitelyTyped](https:
 $ npm install --save-dev @types/node-fetch
 ```
 
+## ECMAScript modules -- development and tests
+
+node-fetch takes advantage of ECMAScript Modules which has gone through various changes in Node.js 12.
+Because of this, hacking on node-fetch with certain versions of Node.js requires some special workflows.
+
+**Note: This section is only applicable for hacking on node-fetch. Using the package from NPM has no special workflows.**
+
+Node.js >12.17 (including 14+) requries no special workflow.
+
+Node.js 12.17: Run tests with `npm run test:experimental`.  If you need to execute node directly, you will need to include the `--experimental-modules` option; e.g. `node --experimental-modules file.js`.
+
+Node.js <12.16 (including 10): Run tests with `npm run test:esm`.  If you need to execute node directly, you will need to include the `-r esm` option; e.g. `node -r esm file.js`.
+
+
 ## Acknowledgement
 
 Thanks to [github/fetch](https://github.com/github/fetch) for providing a solid implementation reference.
