@@ -1,10 +1,12 @@
 import * as stream from 'stream';
 
 import chai from 'chai';
+import chaiPromised from 'chai-as-promised';
 
 import Body from '../src/body.js';
 import {FetchError} from '../src/errors/fetch-error.js';
 
+chai.use(chaiPromised);
 const {expect} = chai;
 
 describe('Body', () => {
@@ -26,11 +28,8 @@ describe('Body', () => {
 		// Simulate an error from the stream
 		theStream.emit('error', new Error('boom'));
 
-		return body.buffer().then(() => {
-			expect.fail('should not have resolved');
-		}, error => {
-			expect(error).to.be.an.instanceOf(FetchError);
-		});
+		return expect(body.buffer()).to.eventually.be.rejectedWith(FetchError,
+			'Invalid response body while trying to fetch undefined: boom');
 	});
 
 	it('should handle a premature closure', () => {
@@ -40,10 +39,7 @@ describe('Body', () => {
 		// Simulate a premature closure of the stream
 		theStream.destroy();
 
-		return body.buffer().then(() => {
-			expect.fail('should not have resolved');
-		}, error => {
-			expect(error).to.be.an.instanceOf(FetchError);
-		});
+		return expect(body.buffer()).to.eventually.be.rejectedWith(FetchError,
+			'Premature close of server response while trying to fetch undefined');
 	});
 });
