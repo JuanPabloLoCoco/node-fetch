@@ -2099,7 +2099,7 @@ describe('node-fetch', () => {
 		});
 
 		const formBody = new FormData();
-		formBody.append('a', '1');
+		formBody.append(...bodyContent.split('='));
 		const formRequest = new Request(url, {
 			method: 'POST',
 			body: formBody,
@@ -2127,7 +2127,7 @@ describe('node-fetch', () => {
 
 		expect(getTotalBytes(streamRequest)).to.be.null;
 		expect(getTotalBytes(blobRequest)).to.equal(blobBody.size);
-		expect(getTotalBytes(formRequest)).to.not.be.null;
+		expect(getTotalBytes(formRequest)).to.equal(formBody.getLengthSync());
 		expect(getTotalBytes(bufferRequest)).to.equal(bufferBody.length);
 		expect(getTotalBytes(stringRequest)).to.equal(bodyContent.length);
 		expect(getTotalBytes(nullRequest)).to.equal(0);
@@ -2138,6 +2138,31 @@ describe('node-fetch', () => {
 		expect(extractContentType(bufferBody)).to.be.null;
 		expect(extractContentType(bodyContent)).to.equal('text/plain;charset=UTF-8');
 		expect(extractContentType(null)).to.be.null;
+	});
+
+	it('should calculate content length and extract content type for spec-compliant FormData', () => {
+		const url = `${base}hello`;
+		const bodyContent = 'a=1';
+
+		// stub spec-compliant FormData object
+		const formBody = new Map([bodyContent.split('=')]);
+		Object.defineProperties(formBody, {
+			append: {value: () => {}},
+			getAll: {value: () => {}}
+		});
+		Object.defineProperty(formBody, Symbol.toStringTag, {value: 'FormData'});
+
+		// create a stub Request object
+		const formRequest = new Request(url, {
+			method: 'POST',
+			body: formBody,
+			size: 1024
+		});
+		// override the body to be the original formBody object
+		Object.defineProperty(formRequest, 'body', {value: formBody});
+
+		expect(getTotalBytes(formRequest)).to.equal(141);
+		expect(extractContentType(formBody, formRequest)).to.startWith('multipart/form-data');
 	});
 
 	it('should encode URLs as UTF-8', async () => {
