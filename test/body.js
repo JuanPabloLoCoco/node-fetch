@@ -42,4 +42,19 @@ describe('Body', () => {
 		return expect(body.buffer()).to.eventually.be.rejectedWith(FetchError,
 			'Premature close of server response while trying to fetch undefined');
 	});
+
+	it('should throw a TypeError on a bad blob', () => {
+		const badBlob = {
+			arrayBuffer: () => {},
+			type: 'bad blob',
+			stream: () => 'not a stream',
+			constructor: () => {}
+		};
+		Object.defineProperty(badBlob, Symbol.toStringTag, {value: 'Blob'});
+
+		const body = new Body(badBlob);
+
+		return expect(body.buffer()).to.eventually.be.rejectedWith(TypeError,
+			'Invalid object for body: not a stream');
+	});
 });

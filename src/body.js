@@ -185,9 +185,8 @@ async function consumeBody(data) {
 		return body;
 	}
 
-	/* c8 ignore next 3 */
 	if (!(body instanceof Stream)) {
-		return Buffer.alloc(0);
+		throw new TypeError(`Invalid object for body: ${body}`);
 	}
 
 	// Body is stream
