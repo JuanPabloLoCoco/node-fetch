@@ -181,7 +181,8 @@ export default async function fetch(url, options_) {
 
 			let body = pump(response_, new PassThrough(), reject);
 			// see https://github.com/nodejs/node/pull/29376
-			if (process.version < 'v12.10') {
+			/* c8 ignore next 3 */
+			if (/^v12\.\d\./.test(process.version) || process.version < 'v12') { // i.e. semver <12.10
 				response_.on('aborted', abortAndFinalize);
 			}
 
