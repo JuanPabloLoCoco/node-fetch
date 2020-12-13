@@ -1,13 +1,14 @@
 name: CI
 
-on:
-  push:
-    branches: [master]
-  pull_request:
-    paths:
-      - "**.js"
-      - "package.json"
-      - ".github/workflows/lint.yml"
+on: [push, workflow_dispatch]
+# on:
+#   push:
+#     branches: [master]
+#   pull_request:
+#     paths:
+#       - "**.js"
+#       - "package.json"
+#       - ".github/workflows/lint.yml"
 jobs:
   lint:
     runs-on: ubuntu-latest
