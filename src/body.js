@@ -31,6 +31,7 @@ export default class Body {
 		size = 0
 	} = {}) {
 		let boundary = null;
+		let totalBytes = 0;
 
 		if (body === null) {
 			// Body is undefined or null
@@ -38,30 +39,39 @@ export default class Body {
 		} else if (isURLSearchParameters(body)) {
 		// Body is a URLSearchParams
 			body = Buffer.from(body.toString());
+			totalBytes = body.length;
 		} else if (isBlob(body)) {
 			// Body is blob
+			totalBytes = body.size;
 		} else if (Buffer.isBuffer(body)) {
 			// Body is Buffer
+			totalBytes = body.length;
 		} else if (types.isAnyArrayBuffer(body)) {
 			// Body is ArrayBuffer
 			body = Buffer.from(body);
+			totalBytes = body.length;
 		} else if (ArrayBuffer.isView(body)) {
 			// Body is ArrayBufferView
 			body = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
+			totalBytes = body.length;
 		} else if (body instanceof Stream) {
 			// Body is stream
+			totalBytes = null;
 		} else if (isFormData(body)) {
 			// Body is an instance of formdata-node
 			boundary = `NodeFetchFormDataBoundary${getBoundary()}`;
+			totalBytes = getFormDataLength(body, boundary);
 			body = Stream.Readable.from(formDataIterator(body, boundary));
 		} else {
 			// None of the above
 			// coerce to string then buffer
 			body = Buffer.from(String(body));
+			totalBytes = body.length;
 		}
 
 		this[INTERNALS] = {
 			body,
+			totalBytes,
 			boundary,
 			disturbed: false,
 			error: null
@@ -221,6 +231,8 @@ async function consumeBody(data) {
 				return Buffer.from(accum.join(''));
 			}
 
+			data[INTERNALS].totalBytes = accumBytes;
+
 			return Buffer.concat(accum, accumBytes);
 		} catch (error) {
 			throw new FetchError(`Could not create Buffer from response body for ${data.url}: ${error.message}`, 'system', error);
@@ -328,6 +340,11 @@ export const extractContentType = (body, request) => {
  */
 export const getTotalBytes = request => {
 	const {body} = request;
+
+	// Use totalBytes if we already know it.
+	if (request[INTERNALS].totalBytes !== null) {
+		return request[INTERNALS].totalBytes;
+	}
 
 	// Body is null or undefined
 	if (body === null) {
