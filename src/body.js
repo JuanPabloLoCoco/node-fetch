@@ -54,14 +54,19 @@ export default class Body {
 			// Body is ArrayBufferView
 			body = Buffer.from(body.buffer, body.byteOffset, body.byteLength);
 			totalBytes = body.length;
-		} else if (body instanceof Stream) {
-			// Body is stream
-			totalBytes = null;
 		} else if (isFormData(body)) {
 			// Body is an instance of formdata-node
 			boundary = `NodeFetchFormDataBoundary${getBoundary()}`;
 			totalBytes = getFormDataLength(body, boundary);
 			body = Stream.Readable.from(formDataIterator(body, boundary));
+		} else if (body instanceof Stream) {
+			if (typeof body.hasKnownLength === 'function' && body.hasKnownLength()) {
+				// Body is FormData input from form-data module
+				totalBytes = body.getLengthSync();
+			} else {
+				// Body is stream
+				totalBytes = null;
+			}
 		} else {
 			// None of the above
 			// coerce to string then buffer
@@ -335,40 +340,13 @@ export const extractContentType = (body, request) => {
  *
  * ref: https://fetch.spec.whatwg.org/#concept-body-total-bytes
  *
- * @param {any} obj.body Body object from the Body instance.
+ * @param {Body} request Body, Request, or Response object
  * @returns {number | null}
  */
 export const getTotalBytes = request => {
-	const {body} = request;
-
 	// Use totalBytes if we already know it.
 	if (request[INTERNALS].totalBytes !== null) {
 		return request[INTERNALS].totalBytes;
-	}
-
-	// Body is null or undefined
-	if (body === null) {
-		return 0;
-	}
-
-	// Body is Blob
-	if (isBlob(body)) {
-		return body.size;
-	}
-
-	// Body is Buffer
-	if (Buffer.isBuffer(body)) {
-		return body.length;
-	}
-
-	// Detect form data input from form-data module
-	if (body && typeof body.getLengthSync === 'function') {
-		return body.hasKnownLength && body.hasKnownLength() ? body.getLengthSync() : null;
-	}
-
-	// Body is a spec-compliant form-data
-	if (isFormData(body)) {
-		return getFormDataLength(body, request[INTERNALS].boundary);
 	}
 
 	// Body is stream
@@ -398,4 +376,3 @@ export const writeToStream = (dest, {body}) => {
 		body.pipe(dest);
 	}
 };
-
