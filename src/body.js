@@ -253,8 +253,22 @@ export const clone = (instance, highWaterMark) => {
 		// Tee instance body
 		p1 = new PassThrough({highWaterMark});
 		p2 = new PassThrough({highWaterMark});
-		body.pipe(p1);
-		body.pipe(p2);
+
+		body.on('data', chunk => {
+			p1.write(chunk);
+			p2.write(chunk);
+		});
+
+		body.on('error', err => {
+			p1.emit('error', err);
+			p2.emit('error', err);
+		});
+
+		body.on('end', () => {
+			p1.end();
+			p2.end();
+		});
+
 		// Set instance body to teed body and return the other teed body
 		instance[INTERNALS].body = p1;
 		body = p2;

@@ -1767,7 +1767,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url).then(res => res.clone().buffer())
-		).to.timeout;
+		).not.to.timeout;
 	});
 
 	it('should timeout on cloning response without consuming one of the streams when the second packet size is equal custom highWaterMark', function () {
@@ -1779,7 +1779,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url, {highWaterMark: 10}).then(res => res.clone().buffer())
-		).to.timeout;
+		).not.to.timeout;
 	});
 
 	it('should not timeout on cloning response without consuming one of the streams when the second packet size is less than default highWaterMark', function () {
