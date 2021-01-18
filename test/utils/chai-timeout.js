@@ -1,9 +1,9 @@
 import pTimeout from 'p-timeout';
 
 export default ({Assertion}, utils) => {
-	utils.addProperty(Assertion.prototype, 'timeout', async function () {
+	utils.addMethod(Assertion.prototype, 'timeout', async function (timeout) {
 		let timeouted = false;
-		await pTimeout(this._obj, 150, () => {
+		await pTimeout(this._obj, timeout, () => {
 			timeouted = true;
 		});
 		return this.assert(

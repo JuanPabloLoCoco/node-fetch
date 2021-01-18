@@ -1767,7 +1767,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url).then(res => res.clone().buffer())
-		).to.timeout;
+		).to.timeout(this.timeout() - 100);
 	});
 
 	it('should timeout on cloning response without consuming one of the streams when the second packet size is equal custom highWaterMark', function () {
@@ -1779,7 +1779,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url, {highWaterMark: 10}).then(res => res.clone().buffer())
-		).to.timeout;
+		).to.timeout(this.timeout() - 100);
 	});
 
 	it('should not timeout on cloning response without consuming one of the streams when the second packet size is less than default highWaterMark', function () {
@@ -1791,7 +1791,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url).then(res => res.clone().buffer())
-		).not.to.timeout;
+		).not.to.timeout(this.timeout() - 100);
 	});
 
 	it('should not timeout on cloning response without consuming one of the streams when the second packet size is less than custom highWaterMark', function () {
@@ -1803,7 +1803,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url, {highWaterMark: 10}).then(res => res.clone().buffer())
-		).not.to.timeout;
+		).not.to.timeout(this.timeout() - 100);
 	});
 
 	it('should not timeout on cloning response without consuming one of the streams when the response size is double the custom large highWaterMark - 1', function () {
@@ -1813,7 +1813,7 @@ describe('node-fetch', () => {
 		});
 		return expect(
 			fetch(url, {highWaterMark: 512 * 1024}).then(res => res.clone().buffer())
-		).not.to.timeout;
+		).not.to.timeout(this.timeout() - 100);
 	});
 
 	it('should allow get all responses of a header', () => {
