@@ -551,6 +551,42 @@ describe('node-fetch', () => {
 		});
 	});
 
+	it('should follow redirect to a different host', () => {
+		const url = `${base}redirect/different-host`;
+		return fetch(url).then(res => {
+			expect(res.url).to.equal(`https://github.com/`);
+			expect(res.status).to.equal(200);
+			expect(res.ok).to.be.true;
+		});
+	});
+
+	it('should follow redirect to a different host with a custom Host header', () => {
+		const url = `${base}redirect/different-host`;
+		return fetch(url, {
+			headers: {
+				host: 'localhost'
+			}
+		}).then(res => {
+			expect(res.url).to.equal(`https://github.com/`);
+			expect(res.ok).to.be.true;
+		});
+	});
+
+	it('should follow redirect to the same host with a custom Host header', () => {
+		const url = `${base}redirect/same-host`;
+		return fetch(url, {
+			headers: {
+				host: 'localhost'
+			}
+		}).then(res => {
+			expect(res.url).to.equal(`${base}inspect`);
+			expect(res.ok).to.be.true;
+			return res.json()
+		}).then(data => {
+			expect(data.headers.host).to.equal('localhost');
+		});
+	});
+
 	it('should ignore invalid headers', () => {
 		const headers = fromRawHeaders([
 			'Invalid-Header ',

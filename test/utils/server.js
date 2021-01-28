@@ -293,6 +293,18 @@ export default class TestServer {
 			res.socket.end('\r\n');
 		}
 
+		if (p === '/redirect/different-host') {
+			res.statusCode = 301;
+			res.setHeader('Location', 'https://github.com/');
+			res.end();
+		}
+
+		if (p === '/redirect/same-host') {
+			res.statusCode = 301;
+			res.setHeader('Location', `http://localhost:${this.address().port}/inspect`);
+			res.end();
+		}
+
 		if (p === '/error/400') {
 			res.statusCode = 400;
 			res.setHeader('Content-Type', 'text/plain');

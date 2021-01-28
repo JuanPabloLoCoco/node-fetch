@@ -147,6 +147,14 @@ export default async function fetch(url, options_) {
 							size: request.size
 						};
 
+						// We allow a custom host header, which is different from the spec, so here we clear the
+						// host header if the new location has a different host than the previous request.
+						const hostHeader = requestOptions.headers.get('host');
+						const requestURL = new URL(request.url);
+						if (hostHeader && requestURL.host != locationURL.host) {
+							requestOptions.headers.delete('host');
+						}
+
 						// HTTP-redirect fetch step 9
 						if (response_.statusCode !== 303 && request.body && options_.body instanceof Stream.Readable) {
 							reject(new FetchError('Cannot follow redirect with body being a readable stream', 'unsupported-redirect'));
